@@ -1,0 +1,36 @@
+<main class="main">
+  <section class="card">
+    <h2>Password Hygiene</h2>
+    <div id="password-tasks" class="task-category"></div>
+  </section>
+
+  <section class="card">
+    <h2>Internet Safety</h2>
+    <div id="internet-tasks" class="task-category"></div>
+  </section>
+
+  <section class="card">
+    <h2>Device Protection</h2>
+    <div id="device-tasks" class="task-category"></div>
+  </section>
+
+  <section class="card">
+    <h2>Progress</h2>
+    <div class="progress-container">
+      <div id="progress-bar"></div>
+    </div>
+    <p id="progress-text">0% Completed</p>
+  </section>
+
+  <section class="card">
+    <h2>Daily Streak</h2>
+    <p id="streak">Current Streak: 0 days ✅</p>
+  </section>
+
+  <button id="dark-mode-toggle">🌙 Dark Mode</button>
+</main>
+<div class="progress-container">
+  <div id="progress-bar"></div>
+</div>
+<p id="progress-text">0% Completed</p>
+<button id="dark-mode-toggle">🌙 Dark Mode</button>
