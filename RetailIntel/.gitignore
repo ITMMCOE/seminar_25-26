@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+pdfReader/   # if your venv is named like this locally
+.Python/
+
+# IDE/editor
+.vscode/
+.idea/
+
+# Data / runtime files
+uploads/
+*.db
+database.db
+*.sqlite3
+
+# OS files
+.DS_Store
+Thumbs.db

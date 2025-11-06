@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RetailIntel Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Poppins', sans-serif;
+      margin: 20px;
+    }
+    .navbar {
+      background-color: #205295;
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .card {
+      border: none;
+      border-radius: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    footer {
+      margin-top: 40px;
+      text-align: center;
+      color: gray;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="navbar">
+    <h2>📈 RetailIntel - Smart Business Insights</h2>
+  </div>
+
+  <div class="container mt-4">
+    <div class="row text-center">
+      <div class="col-md-3"><div class="card p-3"><h5>Total Sales</h5><h3>₹{{ total_sales|int }}</h3></div></div>
+      <div class="col-md-3"><div class="card p-3"><h5>Top Product</h5><h3>{{ top_product }}</h3></div></div>
+      <div class="col-md-3"><div class="card p-3"><h5>Low Stock Items</h5><h3>{{ low_stock_items|length }}</h3></div></div>
+      <div class="col-md-3"><div class="card p-3"><h5>Top 3 Demand</h5><h6>{{ ', '.join(high_demand) }}</h6></div></div>
+    </div>
+
+    <div class="mt-5 text-center">
+      <h4>📈 Select Chart Type</h4>
+      <select id="chartSelector" class="form-select w-50 mx-auto">
+        <option value="sales">Monthly Sales Trend</option>
+        <option value="products">Top 5 Products by Revenue</option>
+        <option value="stock">Stock Overview</option>
+        <option value="prediction">Predicted Sales (Next 3 Months)</option>
+      </select>
+    </div>
+
+    <div class="mt-4">
+      <canvas id="mainChart" height="100"></canvas>
+    </div>
+
+    <div class="mt-5">
+      <h4>💡 Key Insights</h4>
+      <ul>
+        {% for i in insights %}
+        <li>{{ i }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="mt-5 text-center">
+      <a href="/download" class="btn btn-primary">📥 Download Report</a>
+    </div>
+
+    <footer>
+      <p>RetailIntel © 2025 | Data-Driven Insights for Small Businesses</p>
+    </footer>
+  </div>
+
+  <script>
+    const ctx = document.getElementById('mainChart');
+    let currentChart;
+
+    const chartsData = {
+      sales: {
+        type: 'bar',
+        data: {
+          labels: {{ month_labels|tojson }},
+          datasets: [{
+            label: 'Units Sold',
+            data: {{ month_values|tojson }},
+            backgroundColor: '#2C74B3'
+          }]
+        }
+      },
+      products: {
+        type: 'bar',
+        data: {
+          labels: {{ top_products|tojson }},
+          datasets: [{
+            label: 'Revenue (₹)',
+            data: {{ top_revenue_values|tojson }},
+            backgroundColor: ['#144272', '#2C74B3', '#205295', '#5AA0D0', '#A2CFFE']
+          }]
+        },
+        options: { indexAxis: 'y' }
+      },
+      stock: {
+        type: 'doughnut',
+        data: {
+          labels: ['Low Stock', 'Sufficient Stock'],
+          datasets: [{
+            data: [{{ low_stock_items|length }}, {{ month_values|length - low_stock_items|length }}],
+            backgroundColor: ['#ff6b6b', '#1dd1a1']
+          }]
+        }
+      },
+      prediction: {
+        type: 'line',
+        data: {
+          labels: Object.keys({{ predictions|tojson }}),
+          datasets: [{
+            label: 'Predicted Sales',
+            data: Object.values({{ predictions|tojson }}),
+            borderColor: '#2C74B3',
+            fill: false,
+            tension: 0.3
+          }]
+        }
+      }
+    };
+
+    function renderChart(type) {
+      if (currentChart) currentChart.destroy();
+      currentChart = new Chart(ctx, chartsData[type]);
+    }
+
+    renderChart('sales');
+
+    document.getElementById('chartSelector').addEventListener('change', (e) => {
+      renderChart(e.target.value);
+    });
+  </script>
+
+</body>
+</html>
