@@ -40,7 +40,7 @@ except ImportError:
 
 EMBEDDING_FILE = "manwa_enroll_embed.npy"
 PASSWORD_FILE = "manwa_locker.txt"
-GEMINI_KEY = "AIzaSyC7oU_iSJoYRVJhLsqVEy2E8GDGVx9WqbA"  # ← Put your key here!
+GEMINI_KEY = "YOUR_GEMINI_KEY"  # ← Put your key here!
 
 def speak(text):
     engine = pyttsx3.init()
@@ -381,3 +381,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
