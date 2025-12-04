@@ -1,0 +1,116 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+/**
+ * @title DocumentVerification
+ * @dev Stores document metadata (hashes) for users and allows verification 
+ * using a secret key hash, simulating a ZKP-like proof of knowledge.
+ *
+ * NOTE: Documents are never stored on-chain. Only their cryptographic hashes 
+ * and verification status are stored.
+ */
+contract DocumentVerification {
+    // Structure to store document metadata
+    struct Document {
+        bytes32 documentHash;     // SHA-256 hash of the document (Public Input)
+        bytes32 secretKeyHash;    // Hash of the required secret key (Hidden Witness Hash)
+        bool isVerified;          // Verification status
+        uint256 timestamp;        // Upload timestamp
+        string description;       // Document description provided by user
+    }
+
+    // Mapping: User Address -> Array of Documents
+    mapping(address => Document[]) public userDocuments;
+    
+    // Event triggered when a document is uploaded
+    event DocumentUploaded(address indexed owner, bytes32 docHash, string description);
+    
+    // Event triggered when a document is verified
+    event DocumentVerified(address indexed owner, bytes32 docHash);
+    
+    // Event triggered when a document is deleted
+    event DocumentDeleted(address indexed owner, bytes32 docHash);
+
+    /**
+     * @dev Allows a user to register a document hash and the hash of its secret key.
+     * @param _docHash The cryptographic hash of the document content.
+     * @param _secretKeyHash The hash of the secret key required for ZKP-style verification.
+     * @param _description A user-provided description for the document.
+     */
+    function uploadDocument(
+        bytes32 _docHash, 
+        bytes32 _secretKeyHash,
+        string memory _description
+    ) public {
+        require(_docHash != 0, "Document hash cannot be zero.");
+        require(_secretKeyHash != 0, "Secret key hash cannot be zero.");
+
+        userDocuments[msg.sender].push(Document({
+            documentHash: _docHash,
+            secretKeyHash: _secretKeyHash,
+            isVerified: false,
+            timestamp: block.timestamp,
+            description: _description
+        }));
+
+        emit DocumentUploaded(msg.sender, _docHash, _description);
+    }
+
+    /**
+     * @dev Simulates ZKP verification. Proves knowledge of the secret key without revealing it
+     * to external observers (only the contract sees the hash).
+     * NOTE: This uses the standard Solidity keccak256 hash function.
+     * @param _docHash The cryptographic hash of the document to verify.
+     * @param _secretKey The actual secret key string provided by the user.
+     */
+    function verifyDocument(
+        bytes32 _docHash, 
+        string memory _secretKey
+    ) public {
+        bytes32 providedKeyHash = keccak256(abi.encodePacked(_secretKey));
+        bool found = false;
+
+        Document[] storage docs = userDocuments[msg.sender];
+
+        for (uint i = 0; i < docs.length; i++) {
+            if (docs[i].documentHash == _docHash) {
+                // ZKP Simulation: Check if the hash of the provided secret key 
+                // matches the stored hash (witness hash).
+                require(providedKeyHash == docs[i].secretKeyHash, "Verification failed: Invalid Secret Key.");
+
+                docs[i].isVerified = true;
+                found = true;
+                emit DocumentVerified(msg.sender, _docHash);
+                break;
+            }
+        }
+        require(found, "Document not found for this user.");
+    }
+
+    /**
+     * @dev Deletes the document metadata entry for the sender.
+     * @param _docHash The cryptographic hash of the document to delete.
+     */
+    function deleteDocument(bytes32 _docHash) public {
+        Document[] storage docs = userDocuments[msg.sender];
+
+        for (uint i = 0; i < docs.length; i++) {
+            if (docs[i].documentHash == _docHash) {
+                // Swap with the last element and pop to maintain O(1) delete time
+                docs[i] = docs[docs.length - 1];
+                docs.pop();
+                emit DocumentDeleted(msg.sender, _docHash);
+                return;
+            }
+        }
+        revert("Document not found.");
+    }
+
+    /**
+     * @dev Returns all document metadata associated with the sender.
+     * @return An array of Document structs.
+     */
+    function getDocuments() public view returns (Document[] memory) {
+        return userDocuments[msg.sender];
+    }
+}
